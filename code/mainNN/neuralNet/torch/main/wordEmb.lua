@@ -1,15 +1,16 @@
---[[
-Word Embeddings Creation for BioNLP using unsupervised training 
-technique mentioned in Collobert et. al 2011
-Word Embeddings class having Neural network for training and 
-creating wordEmbeddings 
-]]--
+-- -----------------------------------------------------------------------------
+-- Word Embeddings Creation for BioNLP using unsupervised training
+-- technique mentioned in Collobert et. al 2011
+-- Word Embeddings class having Neural network for training and
+-- creating wordEmbeddings
+-- -----------------------------------------------------------------------------
 
 local WordEmb=torch.class("WordEmb")
 local utils=require 'utils'
 
-
+-- ------------------------------------------------
 -- Lua WordEmb class constructor
+-- ------------------------------------------------
 function WordEmb:__init(config)
 	self.train_file=config.train_file
 	self.dev_file=config.dev_file
@@ -19,8 +20,8 @@ function WordEmb:__init(config)
 	self.wdim=config.wdim
 	self.min_freq=config.min_freq
 	self.wwin=config.wwin
-	--self.hid_size=config.hid_size
-	--self.pre_train=config.pre_train
+	self.hid_size=config.hid_size
+	self.pre_train=config.pre_train
 	self.learning_rate=config.learning_rate
 	self.grad_clip=config.grad_clip
 	self.batch_size=config.batch_size
@@ -47,6 +48,9 @@ function WordEmb:__init(config)
 end
 
 
+-- --------------------------------------------------------------------
+-- Model Training function
+-- --------------------------------------------------------------------
 function Senna:train()
 	print('Training...')
 	local start=sys.clock()
@@ -139,7 +143,8 @@ function Senna:train()
 		xlua.progress(self.corpus_size,self.corpus_size)
 
 		-- self:compute_dev_result()
-		print(string.format("Epoch %d done in %.2f minutes. loss=%f\n\n",epoch,((sys.clock()-epoch_start)/60),(epoch_loss/iteration)))
+		print(string.format("Epoch %d done in %.2f minutes. loss=%f\n\n",epoch,
+			((sys.clock()-epoch_start)/60),(epoch_loss/iteration)))
 	end
 	print(string.format("Done in %.2f seconds.",sys.clock()-start))
 end
@@ -166,6 +171,9 @@ end
 	
 end]]--
 
+-- ------------------------------------------------------------------------------------
+-- Model Architecture
+-- ------------------------------------------------------------------------------------
 function Senna:build_model(config)
 	--window approach by Conan - linear, hardTanh and linear layer 
 	local seql1 = nn.Sequential()
@@ -199,6 +207,9 @@ function Senna:build_model(config)
 end 
 
 
+-- ---------------------------------------------------------
+-- Tranfer and run on CUDA
+-- ---------------------------------------------------------
 function Senna:cuda()
 	require 'cunn'
 	self.model:cuda()
@@ -207,7 +218,9 @@ function Senna:cuda()
 end
 	
 
-
+-- --------------------------------------------------------------
+-- Function predicting result
+-- --------------------------------------------------------------
 function Senna:compute_test_result()
 	print('Computing test result...')
 	local start=sys.clock()

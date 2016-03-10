@@ -1,3 +1,7 @@
+-- -----------------------------------------------------------
+-- Utils file has all processing, data manipulation functions
+-- -----------------------------------------------------------
+
 require 'torch'
 require 'math'
 
@@ -8,13 +12,17 @@ min_freq=5 --revisit make 5 after testing, use config var version
 index2word={}
 word2index={}
 window_size=11   --preferrably choose odd number - can make config var, but change that in python file also later
-
--- Function to trim the string  --revisit, not used as of now.  
+window_size = config.text_window_size
+-- -----------------------------------------------------------
+-- Function to trim the string  --revisit, not used as of now
+-- -----------------------------------------------------------
 function utils.trim(s)
   return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
 
--- Function to split a string by given splitpattern.
+-- ----------------------------------------------------------
+-- Function to split a string by given splitpattern
+-- ----------------------------------------------------------
 function utils.splitByChar(str,inSplitPattern)
 	outResults={}
 	local theStart = 1
@@ -28,10 +36,11 @@ function utils.splitByChar(str,inSplitPattern)
 	return outResults
 end
 
-
+-- ----------------------------------------------------------------------
 -- Function to pad tokens. Used for Border effects from Collobert paper
 --Also, making every token in lower case 
 --function utils.padTokens(tokens,pad)
+-- ----------------------------------------------------------------------
 function utils.padTokens(tokens,lpad_len,rpad_len)
 	local res={}
 
@@ -52,7 +61,10 @@ function utils.padTokens(tokens,lpad_len,rpad_len)
 	return res
 end
 
+
+-- -----------------------------------------------------------
 -- Function to get all ngrams
+-- -----------------------------------------------------------
 function utils.getNgrams(doc,n,pad)
 	local res={}
 	--print("doc :: ")
@@ -86,18 +98,21 @@ function utils.getNgrams(doc,n,pad)
 	return res
 end
 
+
+-- ----------------------------------------------------------------------------
 --revisit this func - check what to pass to getNgrams func for n, 2nd arg. 
 -- Function to process a sentence to build vocab
 --function utils.processSentence(config,sentence)
+-- ----------------------------------------------------------------------------
 function utils.processSentence(sentence)
 --	local pad=(config.wwin/2)
-	--print("processSentence & sentence")
+	print("----- processSentence func -------")
 	--print(sentence)
 	wwin = 11  --remove later - take directly from config 
 	local pad=(wwin/2)
 	ngrams = utils.getNgrams(sentence,1,pad)
-	--print("ngrams :: ")
-	--print(ngrams) 
+	print("ngrams :: ")
+	print(ngrams)
 	--for _,word in ipairs(utils.getNgrams(sentence,1,pad)) do
 	for _,word in ipairs(ngrams) do
 
@@ -105,7 +120,10 @@ function utils.processSentence(sentence)
 		total_count=total_count+1
 
 		--word=utils.splitByChar(word,'%$%$%$')[1]
+		print('word')
+		print(word)
 		word=utils.splitByChar(word,' ')[1]
+		print(word)
 		--[[if config.to_lower==1 then
 			word=word:lower()
 		end]]--
@@ -126,48 +144,70 @@ function utils.processSentence(sentence)
 
 		end
 	end
+
+	print('vocab after current line processed')
+	print(vocab)
 	--config.corpus_size=config.corpus_size+1
 	corpus_size=corpus_size+1
 end 
 
 
+-- --------------------------------------------------------------------
 --revisit to add config to this after independent testing  
 --function utils.buildVocab(config)
-function utils.buildVocab()
+-- Notes: need to write iter_docs func that reads from tokenized normal
+-- txt files and build vocab. Don't use text_window txt files for this
+-- ---------------------------------------------------------------------
+function utils.buildVocab(directory)
 	print('Building vocabulary...')
 	local start=sys.clock()
-	--local fptr=io.open(config.train_file,'r')  
-	--revisit - to change acc. to notes page 7 
-	local fptr=io.open('../data/textwin_train.txt','r')
+
+	-- initializing variables to iter a directory
+	local i, t, popen = 0, {}, io.popen
+	local pfile = popen('ls "'..directory..'"')
 
 	-- Fill the vocabulary frequency map
-	--[[config.total_count=0
-	config.corpus_size=0
-	config.corpus_text={}
-        ]]--
+	--config.total_count=0
+	--config.corpus_size=0
+	--config.corpus_text={}
+	-- revisit to check - needs to out of for loop??
 	total_count=0
 	corpus_size=0
 	corpus_text={}
-	
-	while true do
-		local abstract=fptr:read()
-		if abstract==nil then
-			break
+
+	-- for loop for reading all txt files
+	for filename in pfile:lines() do
+		local file_path = directory..filename
+		print(file_path)
+		--local fptr=io.open(config.train_file,'r')
+		--revisit - to change acc. to notes page 7
+		local fptr=io.open(file_path,'r')
+
+		while true do
+			local line=fptr:read()
+			print('line')
+			print(line)
+			if line==nil then
+				break
+			end
+
+			utils.processSentence(line)
+			--table.insert(config.corpus_text,abstract)
+			table.insert(corpus_text,line)
+
 		end
 
-		--print("abstract sentence read")
-		--print(abstract)
-		utils.processSentence(abstract)
-		--table.insert(config.corpus_text,abstract)
-		table.insert(corpus_text,abstract)
-
-	end
-
-	fptr.close()
+		fptr.close()
 	
 	--print("printing corpus text :: ")
 	--print(corpus_text)
+	end   --end of for iter dir loop
+	pfile:close()
 
+	print('inside buildVocab func, outside iter dir loop')
+	print('printing vocab and word2index')
+	print(vocab)
+	print(word2index)
 
 	-- Discard the words that doesn't meet minimum frequency and create indices.
 	--for word,count in pairs(config.vocab) do
@@ -206,14 +246,25 @@ function utils.buildVocab()
 
 end
  
-
-print("generating buildvocab logs ----------")
-utils.buildVocab()
-
---print(vocab)
+-- test block for buildVocab
+--print("generating buildvocab logs ----------")
+-- should create a config.utils_inputFiles_DIR param to pass to buildVocab
+-- from whereever it called from
+--inputFiles_DIR = '../../../../../../data/tokenizedFiles/TextWinTokenFiles/'
+inputFiles_DIR = '../../../../../../data/tokenizedFiles/toy/'
+print('--------------------------START ----------------------')
+utils.buildVocab(inputFiles_DIR)
+print('-------------------------END-------------------------')
+print("printing vocab and word2index complete")
+print(vocab)
+print(index2word)
 print(word2index)
+
+
+-- -------------------------------------------------------------------------------------
 -- Function to get word tensor
 --function utils.getWordTensor(config,words)
+-- -------------------------------------------------------------------------------------
 function utils.getWordTensor(words)
 	
 	local wordTensor=torch.Tensor(#words)
@@ -240,8 +291,10 @@ function utils.getWordTensor(words)
 end
 
 
+-- ----------------------------------------------------------------------------------------
 -- Function to get rnd word tensor --always prefer giving odd sentence window size
 --function utils.getRndWordTensor(config,words)
+-- -----------------------------------------------------------------------------------------
 function utils.getRndWordTensor(words)
 
 	local rnd_wordTensor=torch.Tensor(#words)
@@ -263,29 +316,20 @@ function utils.getRndWordTensor(words)
 		--print(string.format(" index ::%d,%s",i,type(i)))
 		--if i == mid_ind then --revisit 
 		if math.floor(i) == math.floor(mid_ind) then
-		--if i ==6 then 
-			--if 6 == 6 then
 			print("$$$$$$$$$$$$ mid ind matched")
-			print(string.format("if middle index ::%d,%s",mid_ind,type(mid_ind)))
-			print(string.format(" if index ::%d,%s",i,type(i)))
+			print(string.format("middle index ::%d,%s",mid_ind,type(mid_ind)))
+			print(string.format("index ::%d,%s",i,type(i)))
 
 			--pick up a rnd word from vocab dict
 			--generate a random number in a range of size of word2index & pick that word
-			--print(#index2word)
 			math.randomseed(os.time())	
 			math.random(#index2word) 
-			rnd_index=math.random(#index2word)  --#word2index doesnot give correct size 
+			rnd_index=math.random(#index2word)  --#word2index doesnot give correct size
 			print(string.format("rnd index ::%d",rnd_index))
 			rnd_wordTensor[i]=rnd_index	
 					
-		else 
-
-			--print(string.format("else middle index ::%d,%s",mid_ind,type(mid_ind)))
-			--print(string.format(" else index ::%d,%s",i,type(i)))
-
-			--print("mid_ind not matched")	
+		else
 			--if config.word2index[word]==nil then
-			--print("$$$$$$$$$$$$ mid ind not  matched")
 			if word2index[word]==nil then
 				--wordTensor[i]=config.word2index['<UK>']
 				rnd_wordTensor[i]=word2index['<UK>']
@@ -294,30 +338,31 @@ function utils.getRndWordTensor(words)
 				--wordTensor[i]=config.word2index[word]
 				rnd_wordTensor[i]=word2index[word]
 			end
-		
-	
 		end 
 	end
 	return rnd_wordTensor
 end
 
-	 
---check if this is providing every token in lower case, because vocab, word2index and index2word are made from lower case tokens
+
+-- ----------------------------------------------------------------------------------------------
+-- check if this is providing every token in lower case, because vocab,
+-- word2index and index2word are made from lower case tokens
 -- Function to get input tensors.
---function utils.getFullInputTensors(config,sentence) --sentence here is sentence window of 11 words 
-function utils.getFullInputTensors(sentence) 
+--function utils.getFullInputTensors(config,sentence) --sentence here is sentence
+-- window of 11 words
+-- ----------------------------------------------------------------------------------------------
+function utils.getFullInputTensors(sentence)
+	print("------------- Inside get fullInputTensors --------------")
 	--for independent testing 
 	local tensors={}
 	--local pad=(config.wwin/2) --don't need this now here. Logic included in getNgrams func
-	pad=4 --just for testing. until this is corrected/removed from this func
+	local pad=4 --just for testing. until this is corrected/removed from this func
 	local words=utils.getNgrams(sentence,1,pad)
-	--print("words")
-	--print(words)
 	--getting true word tensor
 	--local true_wordTensor=utils.getWordTensor(config,words)
 	local true_wordTensor=utils.getWordTensor(words)
-	--print("true word tensor")
-	--print(true_wordTensor)
+	print("true word tensor")
+	print(true_wordTensor)
 
 	--getting rnd word tensor 
 	--local rnd_wordTensor=utils.getRndWordTensor(config,words)  --new function for creating random sample
@@ -328,23 +373,26 @@ function utils.getFullInputTensors(sentence)
 	for i,word in ipairs(words) do
 		table.insert(tensors,{true_wordTensor[i],rnd_wordTensor[i]})		
 	end
-
-	--print("tensors")
-	--print(tensors)
 	return tensors
 end
 
---testing call 
-print("generating get fullinput tensor logs ----------")
-print("printing size of word2index and index2word")
---print(#word2index)
---print(#index2word)
 
-sentence="Dispersion and migration of uranium U and other toxic metals and"
-ten=utils.getFullInputTensors(sentence)
+-- --------------------------------------------------------------------------------------
+--testing call - Tensor functions
+-- --------------------------------------------------------------------------------------
+--print("generating get fullinput tensor logs ----------")
+--print("printing size of word2index and index2word")
+------print(#word2index)
+------print(#index2word)
+----
+--sentence="Dispersion migration uranium"
+--ten=utils.getFullInputTensors(sentence)
 
+
+-- ----------------------------------------------------------------------------
 -- Function to find predicted class
 --test later
+-- ----------------------------------------------------------------------------
 function utils.argmax(v)
 	local idx=1
 	local max=v[1]
@@ -358,8 +406,10 @@ function utils.argmax(v)
 end
 
 
+-- ------------------------------------------------------------------------------
 -- Function to find accuracy
 --test later
+-- ------------------------------------------------------------------------------
 function utils.accuracy(pred,gold)
 	return torch.eq(pred,gold):sum()/pred:size(1)
 end

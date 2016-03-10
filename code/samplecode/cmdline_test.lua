@@ -1,5 +1,5 @@
 cmd = torch.CmdLine()
---cmd:text()
+cmd:text()
 --cmd:text()
 cmd:addTime('your project name','%F %T')
 cmd:text('Training a simple network')
