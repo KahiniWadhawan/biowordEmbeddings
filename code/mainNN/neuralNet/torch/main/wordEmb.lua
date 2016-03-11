@@ -12,10 +12,11 @@ local utils=require 'utils'
 -- Lua WordEmb class constructor
 -- ------------------------------------------------
 function WordEmb:__init(config)
-	self.train_file=config.train_file
-	self.dev_file=config.dev_file
-	self.test_file=config.test_file
-	self.res_file=config.res_file
+	self.train_file=config.train_file    --revisit - it has to be train_file dir - same as textWinFiles
+	-- for funnctional testing make a toy train_file, txt file
+	self.dev_file=config.dev_file  --revisit no need - for now it is dev.txt
+	--self.test_file=config.test_file -- don't need to test for now
+	self.res_file=config.res_file -- might want to write vectors or something or think of dumping them
 	--self.to_lower=config.to_lower
 	self.wdim=config.wdim
 	self.min_freq=config.min_freq
@@ -30,17 +31,26 @@ function WordEmb:__init(config)
 	self.gpu=config.gpu
 
 
+	-- ---------------------------------------------------
+	-- initializing vocab and word index structures
+	-- ---------------------------------------------------
 	self.vocab={} -- word frequency map for vocabulary 
 	self.index2word={}
 	self.word2index={}
 
-	--build vocab before training the nn 
+	-- ---------------------------------------------------
+	-- build vocab before training the nn
+	-- ---------------------------------------------------
 	utils.buildVocab(self)
 
-        -- build the neural network 
-    	self:build_model()
+	-- ----------------------------------------------------
+	-- build the neural network
+	-- ----------------------------------------------------
+	self:build_model()
 
-	-- keep option to run on gpu 
+	-- ----------------------------------------------------
+	-- keep option to run on gpu
+	-- ----------------------------------------------------
 	if self.gpu==1 then
     	self:cuda()
     	end

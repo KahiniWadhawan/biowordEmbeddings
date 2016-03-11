@@ -30,15 +30,16 @@ cmd:text('Options')
 --These can be set while running program to take different value
 -- data, params taking data file locations
 -- ------------------------------------------------------------------
---cmd:option('-train_file','../data/preprocessed/train.tsv','training set file location')
 cmd:option('-inputFiles_DIR','../../../../../../data/','data dir location')
 cmd:option('-textwinFiles_DIR', '../../../../../../data/tokenizedFiles/TextWinFiles/',
 	'text window files location')
 cmd:option('-vocabFiles_DIR','../../../../../../data/tokenizedFiles/VocabTokenFiles/',
 	'vocab tokens files location')
---cmd:option('-dev_file','../data/preprocessed/dev.tsv','dev set file location')
+cmd:option('-train_file','../../../../../../data/tokenizedFiles/train.txt',
+	'training set file location')
+cmd:option('-dev_file','../../../../../../data/tokenizedFiles/dev.txt','dev set file location')
 --cmd:option('-test_file','../data/preprocessed/test.tsv','test set file location')
---cmd:option('-res_file','../data/preprocessed/result.tsv','result file location')
+cmd:option('-res_file','../../../../../../data/tokenizedFiles/result.txt','result file location')
 cmd:option('-to_lower',1,'change the case of word to lower case')
 
 -- --------------------------------------------------------------------------------------
