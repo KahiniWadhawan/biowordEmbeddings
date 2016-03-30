@@ -65,8 +65,10 @@ def create_text_window(text,filename):
 			#print("window :: ", window)
 			window_str = ''
 			for word in window:
-				window_str = window_str + ' ' + word    #revisit - does space at last creates problem
-
+				if len(window_str) > 0:
+					window_str = window_str + ' ' + word    #revisit - does space at last creates problem
+				else:
+					window_str = word
 			#print("window_str :: ", window_str)
 			fout.write(window_str+'\n')
 

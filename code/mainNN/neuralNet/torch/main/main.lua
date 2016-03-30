@@ -35,6 +35,8 @@ cmd:option('-textwinFiles_DIR', '../../../../../../data/tokenizedFiles/TextWinFi
 	'text window files location')
 cmd:option('-vocabFiles_DIR','../../../../../../data/tokenizedFiles/VocabTokenFiles/',
 	'vocab tokens files location')
+cmd:option('-CSV_DIR','../../../../../../data/tokenizedFiles/CSVFiles/',
+	'csv files location')
 cmd:option('-train_file','../../../../../../data/tokenizedFiles/train.txt',
 	'training set file location')
 cmd:option('-dev_file','../../../../../../data/tokenizedFiles/dev.txt','dev set file location')
@@ -46,21 +48,25 @@ cmd:option('-to_lower',1,'change the case of word to lower case')
 -- model params (general)
 -- --------------------------------------------------------------------------------------
 cmd:option('-wdim',300,'dimensionality of word embeddings') -- revisit - look more into this in glove paper
-cmd:option('-min_freq',5,'words that occur less than <int> times will not be taken for training')
+cmd:option('-min_freq',2,'words that occur less than <int> times will not be taken for training')
 cmd:option('-pre_train',1,'initialize word embeddings with pre-trained vectors?')
 cmd:option('-wwin',5,'word convolution units')  --revisit
 cmd:option('-hid_size',300,'hidden units')     --revisit - with Ronan paper
+cmd:option('-num_classes',2,'number of classes')
 cmd:option('-text_win_size',11,'text window size') --revisit - Ronan - 11, Glove has set it as 8. It can make a
 --huge performance difference.
 
 -- ------------------------------------------------------------------
 -- optimization params
 -- ------------------------------------------------------------------
-cmd:option('-learning_rate',0.01,'learning rate')
+cmd:option('-learningRate',0.01,'learning rate') --revist - 1e-3
 cmd:option('-grad_clip',0.03,'clip gradients at this value') --revisit 
-cmd:option('-batch_size',75,'number of sequences to train on in parallel')  --revisit 
+cmd:option('-batch_size',1,'number of sequences to train on in parallel')  --revisit - problem resolved
 cmd:option('-max_epochs',1,'number of full passes through the training data') --revisit
-cmd:option('-reg',1e-4,'regularization parameter l2-norm')  --revisit - see Ronan paper for values 
+cmd:option('-learningRateDecay', 1e-4,'this lets the algorithm converge more precisely')
+--cmd:option('-reg',1e-4,'regularization parameter l2-norm')  --revisit - see Ronan paper for values
+cmd:option('-weightDecay',0,'to regularize the solution (L2 regularization)') -- revisit for value
+cmd:option('-momentum',0,'to average steps over time')  --revisit for value
 
 -- ------------------------------------------------------------------
 -- run on GPU/CPU
@@ -104,7 +110,10 @@ end
 -- --------------------------------------------------------------------
 model = WordEmb(params)
 model:train()
-
+-- uncomment
+--local lookup_t = model:get_lookup_table()
+--print('lookup table size :: ')
+--print(#lookup_t)
 -- -------------------------------------------------------------------
 -- check accuracy on dev set
 -- -------------------------------------------------------------------
